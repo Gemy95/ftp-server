@@ -8,15 +8,14 @@ app.use(bodyparser.json());
 
 var PromiseFtp = require('promise-ftp');
 var ftp = new PromiseFtp();
-
 var fs = require("fs");
 
-
+//listAll directories api
 app.get("/listAllDirectories",(req,res)=>{
 ftp.connect({host: 'localhost', user: 'swd', password: 'swd'})
 .then(function (serverMessage) {       
   //console.log('Server message: '+serverMessage);
-  return ftp.list('/home');
+  return ftp.list(__dirname);
 }).then(function (list) {
   //console.log(list);
    ftp.end();
@@ -27,7 +26,7 @@ ftp.connect({host: 'localhost', user: 'swd', password: 'swd'})
 })
 
 
-
+//single file upload
 app.post("/upload",(req,res)=>{
 ftp.connect({host: 'localhost', user: 'swd', password: 'swd'})
 .then(function (serverMessage) {
@@ -44,6 +43,7 @@ ftp.connect({host: 'localhost', user: 'swd', password: 'swd'})
 });
 
 
+//download api
 app.get("/download",(req,res)=>{
   ftp.connect({host: 'localhost', user: 'swd', password: 'swd'})
   .then(function (serverMessage) {
@@ -62,6 +62,33 @@ app.get("/download",(req,res)=>{
   });
 })
 
+
+//upload multi files api
+app.post("/uploadMulti",(req,res)=>{
+  ftp.connect({host: 'localhost', user: 'swd', password: 'swd'})
+  .then(function (serverMessage) {
+    return new Promise(function(resolve, reject){
+      var chain = Promise.resolve();
+      ['test1.js','test2.js'].forEach(function(file, i, arr){
+        chain = chain.then(() => {
+          return ftp.put(__dirname+'/main/' + file, __dirname+'/main/' + file)
+        })
+        .catch((err) => { console.log(err.toString()) })  
+        if(i === arr.length - 1)
+          chain.then(() => resolve())
+      })
+    }).then(() => {
+      ftp.end()
+      return res.status(200).json({message:"success , upload multi file"}); 
+    })
+  }).catch((err)=>{
+    console.log("err"+err)
+    return res.status(400).json({message:"failed , multi file upload"});
+  });
+})
+
+
+   
 
 app.listen("6000",()=>{
  console.log("server is listening on port 6000");
