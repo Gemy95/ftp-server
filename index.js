@@ -71,16 +71,17 @@ app.post("/uploadMulti",(req,res)=>{
       var chain = Promise.resolve();
       ['test1.js','test2.js'].forEach(function(file, i, arr){
         chain = chain.then(() => {
-          return ftp.put(__dirname+'/main/' + file, __dirname+'/main/' + file)
+        return ftp.put(__dirname+'/main/' + file, __dirname+'/main/' + file)
         })
-        .catch((err) => { console.log(err.toString()) })  
+        .catch((err) => { console.log(err.toString()) ; reject() })  
         if(i === arr.length - 1)
           chain.then(() => resolve())
       })
     }).then(() => {
-      ftp.end()
+      ftp.end();
       return res.status(200).json({message:"success , upload multi file"}); 
     })
+
   }).catch((err)=>{
     console.log("err"+err)
     return res.status(400).json({message:"failed , multi file upload"});
